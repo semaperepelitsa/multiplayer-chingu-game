@@ -3,31 +3,29 @@ require "set"
 
 server = TCPServer.open("localhost", 4466)
 
-$clients = Set.new
-
 trap(:INT) do
   puts "Shutting down"
-  $clients.each do |client|
-    client.close
-  end
-  server.close
   exit
 end
 
+def broadcast(message, from_client, all_clients = $clients)
+  all_clients.each do |other|
+    other.puts message unless other == from_client
+  end
+end
+
 loop {
-  puts "Listening for a client"
+  clients = Set.new
   Thread.start(server.accept) do |client|
     puts "Connected to a client"
-    $clients << client
+    clients << client
     loop {
       message = client.gets
       break if message.nil?
-      $clients.each do |other|
-        other.puts message unless other == client
-      end
+      broadcast(message, client, clients)
       puts "[#{Time.now}] #{message}"
     }
     puts "Closed connection"
-    $clients.delete(client)
+    clients.delete(client)
   end
 }
