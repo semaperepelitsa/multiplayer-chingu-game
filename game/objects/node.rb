@@ -13,11 +13,6 @@ class Node < Chingu::BasicGameObject
     @remote = {}
   end
 
-  def update
-    super
-    
-  end
-
   def connection_lost?
     @socket.nil?
   end
