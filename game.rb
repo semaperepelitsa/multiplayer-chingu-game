@@ -1,10 +1,19 @@
 require "chingu"
 require "json"
 require "bson"
+require "logger"
+
+$logger = Logger.new($stdout)
+$logger.level = Logger::INFO
 
 class Game < Chingu::Window
   def setup
     push_game_state(Play)
+  end
+
+  def update
+    super
+    self.caption = "FPS: #{fps} milliseconds since last tick: #{milliseconds_since_last_tick}, GC: #{GC.count}"
   end
 end
 
