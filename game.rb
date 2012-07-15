@@ -4,7 +4,7 @@ require "bson"
 require "logger"
 
 $logger = Logger.new($stdout)
-$logger.level = Logger::INFO
+$logger.level = Logger::DEBUG
 
 class Game < Chingu::Window
   def setup
@@ -84,9 +84,17 @@ class Node < Chingu::BasicGameObject
     @remote = {}
   end
 
-  def destroy
+  def update
     super
-    @socket.close if @socket
+    
+  end
+
+  def connection_lost?
+    @socket.nil?
+  end
+
+  def connected?
+    @socket
   end
 
   private
@@ -106,8 +114,8 @@ class Node < Chingu::BasicGameObject
   end
 
   def connection_lost
-    return if @socket.nil?
-    stop_timer(:updates)
+    return if connection_lost?
+    stop_timer(:updates) # doesn't work?
     @socket = nil
     $logger.info "Connection to the server lost"
     connect
@@ -126,7 +134,7 @@ class Node < Chingu::BasicGameObject
   end
 
   def send_data(object)
-    @socket.puts JSON.dump([object.id.to_s] << object.attributes) if @socket
+    @socket.puts JSON.dump([object.id.to_s] << object.attributes) if connected?
   rescue Errno::EPIPE
     connection_lost
   end
@@ -149,15 +157,48 @@ class Node < Chingu::BasicGameObject
   end
 end
 
+class ConnectionLost < Chingu::GameState
+      
+  def initialize(options = {})
+    super
+    @node = options.fetch(:node)
+    add_game_object(@node)
+    @white = Gosu::Color.new(255,255,255,255)
+    @color = Gosu::Color.new(200,0,0,0)
+    @font = Gosu::Font[35]
+    @text = "Connection lost. Retrying..."
+  end
+
+  def update
+    super
+    pop_game_state(:setup => false) if @node.connected?
+  end
+
+  def draw
+    previous_game_state.draw    # Draw prev game state onto screen (in this case our level)
+    $window.draw_quad(  0,0,@color,
+                        $window.width,0,@color,
+                        $window.width,$window.height,@color,
+                        0,$window.height,@color, Chingu::DEBUG_ZORDER)
+                            
+    @font.draw(@text, ($window.width/2 - @font.text_width(@text)/2), $window.height/2 - @font.height, Chingu::DEBUG_ZORDER + 1)
+  end  
+end
+
 class Play < Chingu::GameState
   def setup
     @player = Player.create(x: rand($window.width), y: rand($window.height))
-    Node.create([@player])
+    @node = Node.create([@player])
   end
 
   def draw
     Gosu::Image["grass.png"].draw(0, 0, 0)
     super
+  end
+
+  def update
+    super
+    push_game_state(ConnectionLost.new(node: @node)) if @node.connection_lost?
   end
 end
 
