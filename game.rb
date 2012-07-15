@@ -18,7 +18,7 @@ class Game < Chingu::Window
 end
 
 class BasicPlayer < Chingu::GameObject
-  SPEED = 3
+  SPEED = 4
   traits :velocity
   attr_reader :id
 
