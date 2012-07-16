@@ -8,14 +8,14 @@ trap(:INT) do
   exit
 end
 
-def broadcast(message, from_client, all_clients = $clients)
+def broadcast(message, from_client, all_clients)
   all_clients.each do |other|
     other.puts message unless other == from_client
   end
 end
 
+clients = Set.new
 loop {
-  clients = Set.new
   Thread.start(server.accept) do |client|
     puts "Connected to a client"
     clients << client
