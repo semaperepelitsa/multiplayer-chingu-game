@@ -23,7 +23,6 @@ loop {
       message = client.gets
       break if message.nil?
       broadcast(message, client, clients)
-      puts "[#{Time.now}] #{message}"
     }
     puts "Closed connection"
     clients.delete(client)
