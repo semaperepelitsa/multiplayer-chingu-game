@@ -8,23 +8,29 @@ trap(:INT) do
   exit
 end
 
-def broadcast(message, from_client, all_clients)
-  all_clients.each do |other|
-    other.puts message unless other == from_client
+def broadcast(message, from_id, all_clients)
+  all_clients.each do |id, other|
+    other.puts message unless id == from_id
   end
 end
 
-clients = Set.new
+class Client
+end
+
+clients = {}
 loop {
   Thread.start(server.accept) do |client|
-    puts "Connected to a client"
-    clients << client
+    puts "Connecting to a client"
+    id = client.gets
+    puts "Connected to #{id}"
+    clients[id] = client
     loop {
       message = client.gets
       break if message.nil?
-      broadcast(message, client, clients)
+      broadcast(message, id, clients)
     }
     puts "Closed connection"
-    clients.delete(client)
+    clients.delete(id)
+    broadcast(id, nil, clients)
   end
 }

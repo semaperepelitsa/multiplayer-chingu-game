@@ -1,16 +1,26 @@
 require "json"
 
+module LoggedSocket
+  def puts(message)
+    $logger.info "sending #{message.inspect}"
+    super
+  end
+end
+
 class Node < Chingu::BasicGameObject
   traits :timer
   RECONNECT_AFTER = 500
   SEND_DELAY = 20
 
+  attr_reader :id
+
   def initialize(controlled)
     super()
-    @buffer = ""
-    connect
+    @id = controlled.first.id
     @controlled = controlled
+    @buffer = ""
     @remote = {}
+    connect
   end
 
   def connection_lost?
@@ -25,11 +35,12 @@ class Node < Chingu::BasicGameObject
 
   def connect
     return if @socket
-    @socket = TCPSocket.open('localhost', 4466)
+    @socket = TCPSocket.open('localhost', 4466)#.extend(LoggedSocket)
   rescue Errno::ECONNREFUSED
     $logger.info "Retrying the connection"
     after(RECONNECT_AFTER){ connect }
   else
+    send_id
     $logger.info "Connected"
     every(20, name: :updates) do
       send_updates
@@ -49,6 +60,10 @@ class Node < Chingu::BasicGameObject
     $logger.info "Connection to the server totally lost"
     @remote.each{ |id, object| object.destroy }
     destroy
+  end
+
+  def send_id
+    @socket.puts JSON.dump([id.to_s])
   end
 
   def send_updates
@@ -76,7 +91,12 @@ class Node < Chingu::BasicGameObject
 
   def receive_data(data)
     id, attributes = JSON.parse(data)
-    player = @remote[id] ||= BasicPlayer.create(id: id)
-    player.attributes = attributes
+    if attributes
+      player = @remote[id] ||= BasicPlayer.create(id: id)
+      player.attributes = attributes
+    else
+      $logger.info "Deleting #{id.inspect}"
+      @remote.delete(id).destroy
+    end
   end
 end
