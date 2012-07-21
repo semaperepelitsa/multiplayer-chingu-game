@@ -1,10 +1,12 @@
 require "socket"
 require "set"
+require "logger"
 
 server = TCPServer.open("localhost", 4466)
+logger = Logger.new($stdout)
 
 trap(:INT) do
-  puts "Shutting down"
+  logger.info "Shutting down"
   exit
 end
 
@@ -14,22 +16,19 @@ def broadcast(message, from_id, all_clients)
   end
 end
 
-class Client
-end
-
 clients = {}
 loop {
   Thread.start(server.accept) do |client|
-    puts "Connecting to a client"
-    id = client.gets
-    puts "Connected to #{id}"
+    logger.info "Connecting to a client"
+    id = client.gets.chomp
+    logger.info "Connected to #{id}"
     clients[id] = client
     loop {
       message = client.gets
       break if message.nil?
       broadcast(message, id, clients)
     }
-    puts "Closed connection"
+    logger.info "Disconnected from #{id}"
     clients.delete(id)
     broadcast(id, nil, clients)
   end
