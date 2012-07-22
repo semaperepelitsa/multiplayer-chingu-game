@@ -99,7 +99,7 @@ class Node < Chingu::BasicGameObject
   def receive_data(data)
     id, attributes = JSON.parse(data)
     if attributes
-      player = @remote[id] ||= BasicPlayer.create(id: id)
+      player = @remote[id] ||= Player.create(id: id, remote: true)
       player.attributes = attributes
     else
       $logger.info "Deleting #{id.inspect}"

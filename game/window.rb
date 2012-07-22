@@ -2,6 +2,17 @@ require "chingu"
 require "logger"
 require "play"
 
+class Chingu::GameObject
+  def attributes
+    [x, y]
+  end
+
+  def attributes=(array)
+    self.x = array[0]
+    self.y = array[1]
+  end
+end
+
 class Game < Chingu::Window
   def setup
     $logger = Logger.new($stdout)
