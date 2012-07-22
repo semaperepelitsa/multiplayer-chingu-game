@@ -7,6 +7,8 @@ class Bullet < RemoteGameObject
 
   def initialize(options = {})
     super({ image: 'bullet.png', zorder: 150 }.merge(options))
+    i = rand(2) + 1
+    Gosu::Sound["bullet_#{i}.wav"].play
   end
 
   def angle_rad
@@ -26,9 +28,6 @@ class Bullet < RemoteGameObject
 
       self.velocity_x = SPEED * Math.sin(angle_rad)
       self.velocity_y = - SPEED * Math.cos(angle_rad)
-
-      i = rand(2) + 1
-      Gosu::Sound["bullet_#{i}.wav"].play
     end
   end
 
