@@ -36,6 +36,12 @@ class Node < Chingu::BasicGameObject
     @socket
   end
 
+  def update
+    super
+    send_updates
+    receive_updates
+  end
+
   private
 
   def connect
@@ -47,10 +53,6 @@ class Node < Chingu::BasicGameObject
   else
     send_id
     $logger.info "Connected"
-    every(20, name: :updates) do
-      send_updates
-      receive_updates
-    end
   end
 
   def connection_lost
