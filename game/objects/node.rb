@@ -20,6 +20,11 @@ class Node < Chingu::BasicGameObject
     @controlled = controlled
     @buffer = ""
     @remote = {}
+
+    @host, @port = ARGV
+    @host ||= 'localhost'
+    @port ||= 4466
+
     connect
   end
 
@@ -35,7 +40,7 @@ class Node < Chingu::BasicGameObject
 
   def connect
     return if @socket
-    @socket = TCPSocket.open('localhost', 4466)#.extend(LoggedSocket)
+    @socket = TCPSocket.open(@host, @port)#.extend(LoggedSocket)
   rescue Errno::ECONNREFUSED
     $logger.info "Retrying the connection"
     after(RECONNECT_AFTER){ connect }
