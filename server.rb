@@ -2,7 +2,7 @@ require "socket"
 require "set"
 require "logger"
 
-host, port = "localhost", 4466
+host, port = "localhost", ENV['PORT'] || 4466
 server = TCPServer.open(host, port)
 logger = Logger.new($stdout)
 
