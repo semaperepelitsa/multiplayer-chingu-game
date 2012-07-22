@@ -2,13 +2,16 @@ require "socket"
 require "set"
 require "logger"
 
-server = TCPServer.open("localhost", 4466)
+host, port = "localhost", 4466
+server = TCPServer.open(host, port)
 logger = Logger.new($stdout)
 
 trap(:INT) do
   logger.info "Shutting down"
   exit
 end
+
+logger.info "Listening on #{host}:#{port}"
 
 def broadcast(message, from_id, all_clients)
   all_clients.each do |id, other|
