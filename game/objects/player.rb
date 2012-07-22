@@ -3,13 +3,11 @@ require "handgun"
 require "identity"
 require "cursor"
 
-class Player < Chingu::GameObject
-  include Identity
+class Player < RemoteGameObject
   SPEED = 4
   traits :velocity
 
   def initialize(opts={})
-    extend(Controls) unless opts[:remote]
     super(opts.merge(image: "player.png", zorder: 100))
   end
 

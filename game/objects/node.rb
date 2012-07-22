@@ -7,26 +7,62 @@ module LoggedSocket
   end
 end
 
-class ControlledGameObjectList
-  def initialize(game_objects = [])
-    @game_objects = game_objects 
-  end
-end
-
 class Node < Chingu::BasicGameObject
+  class GameObjectList
+    include Identity
+
+    def self.[](id)
+      i = new
+      i.id = id
+      i
+    end
+
+    def initialize(game_objects = [])
+      @game_objects = game_objects
+      setup_id
+    end
+
+    def <<(obj)
+      @game_objects << obj
+    end
+
+    def attributes
+      [id, @game_objects.map(&:attributes)]
+    end
+
+    def update(data)
+      data.each_with_index do |attributes, i|
+        @game_objects[i] ||= load_object(attributes)
+        @game_objects[i].attributes = attributes
+      end
+    end
+
+    def destroy_all
+      @game_objects.each(&:destroy)
+    end
+
+    private
+
+    def load_object(attributes)
+      $logger.info "Object #{attributes} loaded"
+      type = attributes.pop
+      Object.const_get(type).create(remote: true)
+    end
+  end
+
   traits :timer
   RECONNECT_AFTER = 500
   SEND_DELAY = 20
 
-  attr_reader :id
+  attr_reader :controlled
 
   def initialize(controlled)
     super()
-    @id = controlled.first.id
-    @controlled = controlled#.map{ |obj| obj.extend(Identity) }
-    p controlled
+    @controlled = GameObjectList.new(controlled)
     @buffer = ""
-    @remote = {}
+    @remote = Hash.new do |hash, id|
+      hash[id] = GameObjectList[id]
+    end
 
     @host, @port = ARGV
     @host ||= 'localhost'
@@ -72,22 +108,16 @@ class Node < Chingu::BasicGameObject
 
   def connection_totally_lost
     $logger.info "Connection to the server totally lost"
-    @remote.each{ |id, object| object.destroy }
+    @remote.each{ |id, objects| objects.destroy_all }
     destroy
   end
 
   def send_id
-    @socket.puts JSON.dump([id.to_s])
+    @socket.puts JSON.dump(@controlled.id)
   end
 
   def send_updates
-    @controlled.each do |object|
-      send_data(object)
-    end
-  end
-
-  def send_data(object)
-    @socket.puts JSON.dump([object.id.to_s] << object.attributes) if connected?
+    @socket.puts JSON.dump(@controlled.attributes) if connected?
   rescue Errno::EPIPE
     connection_lost
   end
@@ -104,13 +134,12 @@ class Node < Chingu::BasicGameObject
   end
 
   def receive_data(data)
-    id, attributes = JSON.parse(data)
-    if attributes
-      player = @remote[id] ||= Player.create(id: id, remote: true)
-      player.attributes = attributes
+    id, objects = JSON.parse(data)
+    if objects
+      @remote[id].update(objects)
     else
       $logger.info "Deleting #{id.inspect}"
-      @remote.delete(id).destroy
+      @remote.delete(id).destroy_all
     end
   end
 end
