@@ -3,6 +3,7 @@ require "set"
 require "logger"
 
 host, port = "localhost", ENV['PORT'] || 4466
+p ENV
 server = TCPServer.open(host, port)
 logger = Logger.new($stdout)
 
