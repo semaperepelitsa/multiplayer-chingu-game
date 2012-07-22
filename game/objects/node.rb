@@ -7,6 +7,12 @@ module LoggedSocket
   end
 end
 
+class ControlledGameObjectList
+  def initialize(game_objects = [])
+    @game_objects = game_objects 
+  end
+end
+
 class Node < Chingu::BasicGameObject
   traits :timer
   RECONNECT_AFTER = 500
@@ -17,7 +23,8 @@ class Node < Chingu::BasicGameObject
   def initialize(controlled)
     super()
     @id = controlled.first.id
-    @controlled = controlled
+    @controlled = controlled#.map{ |obj| obj.extend(Identity) }
+    p controlled
     @buffer = ""
     @remote = {}
 

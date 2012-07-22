@@ -4,12 +4,11 @@ require "play"
 
 class Chingu::GameObject
   def attributes
-    [x, y]
+    [x, y, angle]
   end
 
   def attributes=(array)
-    self.x = array[0]
-    self.y = array[1]
+    self.x, self.y, self.angle = array
   end
 end
 

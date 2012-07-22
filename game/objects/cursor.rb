@@ -11,4 +11,13 @@ class Cursor < Chingu::GameObject
     self.x = $window.mouse_x
     self.y = $window.mouse_y
   end
+
+  module Follower
+    attr_accessor :cursor
+
+    def update
+      super
+      self.angle = Gosu.angle(x, y, cursor.x, cursor.y)
+    end
+  end
 end

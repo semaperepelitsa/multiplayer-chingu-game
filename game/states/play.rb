@@ -8,6 +8,7 @@ class Play < Chingu::GameState
     @player = Player.create(x: rand($window.width), y: rand($window.height))
     @node = Node.create([@player])
     @cursor = Cursor.create
+    @player.cursor = @cursor
   end
 
   def draw
