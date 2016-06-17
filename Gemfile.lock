@@ -1,7 +1,35 @@
 GEM
+  remote: https://rubygems.org/
   specs:
+    bson (4.1.1)
+    chingu (0.8.1)
+      crack
+      gosu (>= 0.7.25)
+      rest-client
+    crack (0.4.3)
+      safe_yaml (~> 1.0.0)
+    domain_name (0.5.20160615)
+      unf (>= 0.0.5, < 1.0.0)
+    gosu (0.10.7)
+    http-cookie (1.0.2)
+      domain_name (~> 0.5)
+    mime-types (2.99.1)
+    netrc (0.7.8)
+    rest-client (1.8.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 3.0)
+      netrc (~> 0.7)
+    safe_yaml (1.0.4)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.2)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  bson
+  chingu
+
+BUNDLED WITH
+   1.11.2
